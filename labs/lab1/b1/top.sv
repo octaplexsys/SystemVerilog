@@ -14,7 +14,11 @@ module coder #(parameter WIDTH = 4) (
 	output	logic [ WIDTH - 1 : 0 ]		code
 	);
 	
-	genvar i;
-	generate
+	always_comb begin
+		if ( line ) begin
+			code = 1';
+			
+	end
+		
 	
 endmodule
