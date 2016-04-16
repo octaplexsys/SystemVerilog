@@ -15,13 +15,6 @@ module coder #(parameter WIDTH = 4) (
 	);
 	
 	genvar i;
-	
 	generate
-		for( i = 2**WIDTH - 1; i >= 0; ++i ) begin : forloop
-			if ( line[i] ) begin
-				assign code = i;
-			end
-		end
-	endgenerate
 	
 endmodule
