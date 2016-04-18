@@ -9,7 +9,7 @@ module top (
 	
 endmodule
 
-module coder #(parameter WIDTH = 4) (
+module coder #( parameter WIDTH = 4 ) (
 	input		logic [ 2**WIDTH - 1 : 0 ]	line,
 	output	logic [ WIDTH : 0 ]		code
 	);
