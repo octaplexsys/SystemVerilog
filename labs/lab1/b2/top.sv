@@ -1,7 +1,7 @@
-parameter N = 13;
+parameter N = 3;
 
 module top (
-	input	logic [ N - 1 : 0 ]		code,
+	input		logic [ N : 0 ]			code,
 	output	logic [ 2**N - 1 : 0 ]	line
 	);
 	
@@ -10,13 +10,17 @@ module top (
 endmodule
 
 module decoder #(parameter WIDTH = 4) (
-	input	logic [ WIDTH - 1 : 0 ]		code,
+	input	logic [ WIDTH : 0 ]		code,
 	output	logic [ 2**WIDTH - 1 : 0 ]	line
 	);
 	
 	always_comb begin
-		line = 0;
-		line[code] = 1;
+		line = '0;
+		if ( code ) begin
+			line[code - 1'b1] = 1'b1;
+		end else begin
+			line = '0;
+		end
 	end		
 	
 endmodule
@@ -28,7 +32,7 @@ module tb ( );
 
 	parameter N = 4;
 	
-	logic [ N - 1 : 0 ]		code;
+	logic [ N : 0 ]		code;
 	logic [ 2**N - 1 : 0 ]	line;
 	
 	decoder #( N ) decoder_instance ( .* );
@@ -41,7 +45,7 @@ module tb ( );
 		
 	always begin
 		#10ns;
-		code <= $urandom % 2**N;
+		code <= $urandom % 2**N + $urandom % 2;
 	end		
 	
 endmodule
