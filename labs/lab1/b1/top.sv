@@ -1,4 +1,4 @@
-parameter N = 8;
+parameter N = 3;
 
 module top (
 	input	logic [ 2**N - 1 : 0 ]	line,
@@ -14,11 +14,16 @@ module coder #(parameter WIDTH = 4) (
 	output	logic [ WIDTH - 1 : 0 ]		code
 	);
 	
+	logic [ WIDTH - 1 : 0 ]	wtf;
+	
 	always_comb begin
-		if ( line ) begin
-			code = 1';
-			
+		wtf = '0;
+		while ( wtf < WIDTH ) begin
+			if ( line[wtf] == 1 ) begin
+				code = wtf;
+			end
+			++wtf;
+		end
 	end
-		
 	
 endmodule

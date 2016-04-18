@@ -40,7 +40,7 @@ module tb ( );
 	end
 		
 	always begin
-		#50ns;
+		#10ns;
 		code <= $urandom % 2**N;
 	end		
 	
