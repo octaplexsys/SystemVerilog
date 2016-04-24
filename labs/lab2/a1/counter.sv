@@ -1,4 +1,4 @@
-module counter #( parameter WIDTH = 5, parameter OVERFLOW = 2**WIDTH - 1 ) (
+module counter #( parameter WIDTH = 8, parameter OVERFLOW = 2**WIDTH - 1 ) (
 	input	logic					rst_i,
 	input	logic					clk_i,
 	input	logic					en_i,
