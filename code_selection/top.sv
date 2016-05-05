@@ -1,40 +1,38 @@
 module top (
-	input	logic				rst_i,
-	input	logic				clk_i,
-	input	logic [ 2 : 0 ]		lp_i,
-	input	logic [ 2 : 0 ]		object_number_i,
-	input	logic				command_i,
-	input	logic				en_i,
-	output	logic [ 19 : 0 ]	status_o
-	);
-	
-	logic [ 3 : 0 ] select;
-	logic [ 19 : 0 ] object_status;
-	
-	linear_point lp0( rst_i, clk_i, select[0], object_number_i, command_i, object_status[4 : 0] );
-	linear_point lp1( rst_i, clk_i, select[1], object_number_i, command_i, object_status[9 : 5] );
-	linear_point lp2( rst_i, clk_i, select[2], object_number_i, command_i, object_status[14 : 10] );
-	linear_point lp3( rst_i, clk_i, select[3], object_number_i, command_i, object_status[19 : 15] );
-	
-	assign status_o = object_status;
-	
-	always_comb begin
-		if ( rst_i ) begin
-			select = 0;
-		end else begin
-			if ( en_i ) begin
-				case( lp_i )
-					0: begin select = 1; end
-					1: begin select = 2; end
-					2: begin select = 4; end
-					3: begin select = 8; end
-					default: begin select = 0; end
-				endcase
-			end else begin
-				select = 0;
-			end
-		end
-	end
-	
-	
+  input  logic            rst_i,
+  input  logic            clk_1_i,
+  input  logic            clk_2_i,
+  input  logic [ 5 : 0 ]  data_i,
+  input  logic            data_val_i,
+  output logic [ 17 : 0 ] status_o
+);
+  
+  logic busy;
+  logic ser_data;
+  
+  serializer serial ( .*, .clk_i( clk_1_i ), .ser_data_o( ser_data ), .busy_o( busy ) );
+  logic [ 4 : 0 ] address;
+  logic           command;
+  
+  deserializer deserial ( rst_i, clk_2_i, busy, ser_data, address, command );
+  
+  object #( 1 )  obj_1  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[0]  ) );
+  object #( 2 )  obj_2  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[1]  ) );
+  object #( 3 )  obj_3  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[2]  ) );
+  object #( 4 )  obj_4  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[3]  ) );
+  object #( 5 )  obj_5  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[4]  ) );
+  object #( 6 )  obj_6  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[5]  ) );
+  object #( 7 )  obj_7  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[6]  ) );
+  object #( 8 )  obj_8  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[7]  ) );
+  object #( 9 )  obj_9  ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[8]  ) );
+  object #( 10 ) obj_10 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[9]  ) );
+  object #( 11 ) obj_11 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[10] ) );
+  object #( 12 ) obj_12 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[11] ) );
+  object #( 13 ) obj_13 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[12] ) );
+  object #( 14 ) obj_14 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[13] ) );
+  object #( 15 ) obj_15 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[14] ) );
+  object #( 16 ) obj_16 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[15] ) );
+  object #( 17 ) obj_17 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[16] ) );
+  object #( 18 ) obj_18 ( .*, .clk_i( clk_2_i ), .address_i( address ), .command_i( command ), .status_o( status_o[17] ) );
+
 endmodule
