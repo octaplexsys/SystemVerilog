@@ -7,8 +7,8 @@ module deserializer (
   output logic           command_o
 );
   
-  logic [ 16 : 0 ] data;
-  logic [ 4 : 0 ] count;
+  logic [ 4 : 0 ] data;
+  logic [ 2 : 0 ] count;
   logic busy;
   
   always_ff @( posedge rst_i or posedge clk_i ) begin
@@ -22,7 +22,7 @@ module deserializer (
         if ( data_val_i ) begin
           busy    <= '1;
           data[0] <= ser_data_i;
-          count   <= 5'd17;
+          count   <= 5'd5;
         end else begin
           data       <= '0;
           data_o     <= '0;
@@ -32,14 +32,14 @@ module deserializer (
       end else begin
         if ( count == 1'd1 ) begin
           busy       <= '0;
-          data_o[4]  <= data[16] && ( data[15] || data[14]   ) || data[15] && data[14]   ;
-          data_o[3]  <= data[13] && ( data[12] || data[11]   ) || data[12] && data[11]   ;
-          data_o[2]  <= data[10] && ( data[9]  || data[8]    ) || data[9]  && data[8]    ;
-          data_o[1]  <= data[7]  && ( data[6]  || data[5]    ) || data[6]  && data[5]    ;
-          data_o[0]  <= data[4]  && ( data[3]  || data[2]    ) || data[3]  && data[2]    ;
-          command_o  <= data[1]  && ( data[0]  || ser_data_i ) || data[0]  && ser_data_i ;
+          data_o[4]  <= data[4];
+          data_o[3]  <= data[3];
+          data_o[2]  <= data[2];
+          data_o[1]  <= data[1];
+          data_o[0]  <= data[0];
+          command_o  <= ser_data_i;
         end else begin
-          for ( int i = 16; i > 0; --i ) begin
+          for ( int i = 4; i > 0; --i ) begin
             data[i] <= data[i - 1];
           end
           data[0] <= ser_data_i;

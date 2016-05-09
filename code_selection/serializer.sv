@@ -22,10 +22,10 @@ module serializer (
         if ( data_val_i ) begin
           data   <= data_i;
           busy_o <= '1;
-          count  <= 3'd6;
+          count  <= 3'd5;
         end
       end else begin
-        if ( count == 1'd1) begin
+        if ( count == 1'd0) begin
           busy_o <= '0;
           data   <= '0;
         end else begin
