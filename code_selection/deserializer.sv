@@ -15,35 +15,23 @@ module deserializer (
     if ( rst_i ) begin
       data       <= '0;
       data_o     <= '0;
-      count      <= '0;
       busy       <= '0;
     end else begin
+      data  <= { data[3 : 0], ser_data_i };
       if ( !busy ) begin
         if ( data_val_i ) begin
-          busy    <= '1;
-          data[0] <= ser_data_i;
-          count   <= 5'd5;
+          busy   <= '1;
+          count  <= 3'd5;
         end else begin
-          data       <= '0;
-          data_o     <= '0;
-          count      <= '0;
-          busy       <= '0;
+          data_o <= '0;
         end
       end else begin
-        if ( count == 1'd1 ) begin
+        if ( count == 3'd1 ) begin
           busy       <= '0;
-          data_o[4]  <= data[4];
-          data_o[3]  <= data[3];
-          data_o[2]  <= data[2];
-          data_o[1]  <= data[1];
-          data_o[0]  <= data[0];
+          data_o     <= data;
           command_o  <= ser_data_i;
         end else begin
-          for ( int i = 4; i > 0; --i ) begin
-            data[i] <= data[i - 1];
-          end
-          data[0] <= ser_data_i;
-          count <= count - 1'd1;
+          count <= count + 3'd7;
         end
       end
     end

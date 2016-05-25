@@ -16,24 +16,17 @@ module serializer (
     if ( rst_i ) begin
       data   <= '0;
       busy_o <= '0;
-      count  <= '0;
     end else begin
       if ( !busy_o ) begin
-        if ( data_val_i ) begin
-          data   <= data_i;
-          busy_o <= '1;
-          count  <= 3'd5;
-        end
+        data   <= data_i;
+        busy_o <= data_val_i;
+        count  <= 3'd5;
       end else begin
-        if ( count == 1'd0) begin
+        if ( count == 3'd0) begin
           busy_o <= '0;
-          data   <= '0;
         end else begin
-          for ( int i = 5; i > 0; --i ) begin
-            data[i] <= data[i - 1];
-            data[0] <= 1'd0;
-          end
-          count <= count - 1'b1;
+          data <= { data[ 4 : 0 ], 1'd0 };
+          count <= count + 3'd7;
         end
       end
     end

@@ -15,7 +15,13 @@ module top (
   
   deserializer deserial ( rst_i, clk_i, busy, ser_data, address, command );
   
-  object #( 1 )  obj_1  ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[0]  ) );
+  genvar i;
+  generate
+    for ( i = 1; i < 19; ++i ) begin : OBJ
+      object #( i )  obj  ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[i - 1]  ) );
+    end : OBJ
+  endgenerate
+  /*
   object #( 2 )  obj_2  ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[1]  ) );
   object #( 3 )  obj_3  ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[2]  ) );
   object #( 4 )  obj_4  ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[3]  ) );
@@ -33,5 +39,6 @@ module top (
   object #( 16 ) obj_16 ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[15] ) );
   object #( 17 ) obj_17 ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[16] ) );
   object #( 18 ) obj_18 ( .*, .address_i( address ), .command_i( command ), .status_o( status_o[17] ) );
+  */
 
 endmodule

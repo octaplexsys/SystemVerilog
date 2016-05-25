@@ -66,3 +66,4 @@ set_global_assignment -name SYSTEMVERILOG_FILE deserializer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE linear_point.sv
 set_global_assignment -name FLOW_ENABLE_RTL_VIEWER ON
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS OFF
+set_global_assignment -name EDA_NATIVELINK_SIMULATION_SETUP_SCRIPT simulation/modelsim/wave.do -section_id eda_simulation
