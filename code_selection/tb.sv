@@ -8,12 +8,12 @@ module tb( );
   top DUT ( .* );
   
   initial begin
-    rst_i      = 1;
+    rst_i      = 0;
     clk_i    = 1;
     data_i     = '0;
     data_val_i = 1;
     #45ns;
-    rst_i = 0;
+    rst_i = 1;
   end
   
   initial begin

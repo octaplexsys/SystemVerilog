@@ -6,8 +6,8 @@ module object #( parameter ADDR = 1 ) (
   output logic           status_o
 );
 
-  always_ff @( posedge clk_i or posedge rst_i ) begin
-    if ( rst_i ) begin
+  always_ff @( posedge clk_i or negedge rst_i ) begin
+    if ( !rst_i ) begin
       status_o <= 0;
     end else begin
       if ( address_i == ADDR ) begin

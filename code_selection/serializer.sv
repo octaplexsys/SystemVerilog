@@ -12,8 +12,8 @@ module serializer (
   
   assign ser_data_o = data[5];
   
-  always_ff @( posedge rst_i or posedge clk_i ) begin
-    if ( rst_i ) begin
+  always_ff @( posedge clk_i or negedge rst_i ) begin
+    if ( !rst_i ) begin
       data   <= '0;
       busy_o <= '0;
     end else begin

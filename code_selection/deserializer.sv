@@ -11,8 +11,8 @@ module deserializer (
   logic [ 2 : 0 ] count;
   logic busy;
   
-  always_ff @( posedge rst_i or posedge clk_i ) begin
-    if ( rst_i ) begin
+  always_ff @( posedge clk_i or negedge rst_i ) begin
+    if ( !rst_i ) begin
       data       <= '0;
       data_o     <= '0;
       busy       <= '0;
