@@ -1,4 +1,5 @@
 module spi_slave_tb;
+	
 
 	logic	rst;
 	logic	clk;
@@ -8,35 +9,82 @@ module spi_slave_tb;
 	logic	sck;
 	logic	cs;
 	
-	logic	cpol; // polarity control
-	logic	cpha; // phase control
-	logic	msb_first; // when is 1, first bit on miso is shift[7]
-						// else shift[0]
+	logic	cpol;
+	logic	cpha;
+	
+	logic	msb_first;
 	
 	logic[7:0] data_out;
 	logic[7:0] data_in;
 	
-	logic	busy; 		// is 1 when data is transmitted
+	logic	busy;
 	logic	end_of_byte;
 	
 	spi_slave DUV(.*);
 	
 	initial begin
-		rst		= 1;
-		clk		= 0;
+		rst	= 1;
+		clk	= 0;
 		
 		mosi	= 0;
 		sck		= 0;
 		cs		= 1;
 		
-		#50ns
-		rst		= 0;
+		cpol	= 0;
+		cpha	= 0;
+	
+		msb_first	= 1;
+	
+		data_out	= 'b1001_0101;
 		
-		#250ns
+		#40ns
+		rst	= ~rst;
+		#15ns
+		cs	= ~cs;
+		
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		sck = ~sck;
+		#77ns
+		cs = ~cs;
+		
+		#77ns
 		$stop;
 	end
 	
 	always
 	#10ns clk = ~clk;
+	
+	always @(negedge sck)
+		mosi <= $urandom() % 2;
 	
 endmodule

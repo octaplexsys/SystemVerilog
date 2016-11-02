@@ -4,7 +4,6 @@
  *    Date: 01.11.2016
  *    kga1389@gmail.com
  */
-
 module spi_slave
 (
 	input	logic	rst, // global external reset
@@ -15,20 +14,19 @@ module spi_slave
 	input	logic	sck,
 	input	logic	cs,
 	
-	input	logic	cpol, // polarity control
-	input	logic	cpha, // phase control
-	input	logic	msb_first, // when is 1, most significant bit is sended at first
+	input	logic	cpol,		// polarity control
+	input	logic	cpha,		// phase control
+	
+	input	logic	msb_first,	// when is 1, most significant bit is sended at first
 								// else - at least (direction of transmission)
 	
 	input	logic[7:0] data_out, // storage register for transmitted data
 	output	logic[7:0] data_in,  // storage register for received data
 	
-	output	logic	busy, 		// is 1 when data is transmitted
-	output	logic	end_of_byte // one cycle pulse  0-1-0 at the end of transmission
+	output	logic	busy, 		// is 1 if spi_slave is busy, 0 if it's free
+	output	logic	end_of_byte // is 1 at the end of transmission, keep value until new transmission
 );
-
-	// synchronizers against metastability
-	
+	// synchronizers against metastability	
 	logic	sck_sync_1;
 	logic	sck_sync_2;
 	logic	sck_sync_2_prev;
@@ -61,11 +59,9 @@ module spi_slave
 	assign read_edge	= cpha	?	(cpol ? sck_posedge : sck_negedge):
 									(cpol ? sck_negedge : sck_posedge);
 	assign shift_edge	= cpha	?	(cpol ? sck_negedge : sck_posedge):
-									(cpol ? sck_posedge : sck_negedge);
+									(cpol ? sck_posedge : sck_negedge);	
 	
-	
-	// synchronizers against metastability
-	
+	// synchronizers against metastability	
 	logic cs_sync_1;
 	logic cs_sync_2;
 	logic cs_sync_2_prev;
@@ -85,13 +81,14 @@ module spi_slave
 		end
 	end
 	
-	// looking for the negative edge
+	// looking for the edges
 	logic	cs_negedge;
+	logic	cs_posedge;
 	
-	assign	cs_negedge = cs_sync_2_prev & (~sck_sync_2); // from 1 to 0
+	assign	cs_posedge = (~cs_sync_2_prev) & cs_sync_2; // from 0 to 1
+	assign	cs_negedge = cs_sync_2_prev & (~cs_sync_2); // from 1 to 0
 	
 	// synchronizers against metastability
-	
 	logic	mosi_sync_1;
 	logic	mosi_sync_2;
 	
@@ -109,47 +106,61 @@ module spi_slave
 	end
 	
 	// main shift registers
-	
 	logic[7:0]	input_shift_reg;
 	logic[7:0]	output_shift_reg;
-	logic[2:0]	bit_counter;
+	logic[7:0]	bit_counter;
 	
 	always_ff @(posedge clk or posedge rst)
 	begin
 		if (rst)
 		begin
-			output_shift_reg	<= '0;
+			data_in				<= '0;
 			input_shift_reg		<= '0;
+			output_shift_reg	<= '0;
 			bit_counter			<= '0;
+			
+			busy		<= 0;
+			end_of_byte	<= 0;
 		end else
 		begin
 			if(cs_negedge)
 			begin
-				bit_counter <= '1;
+				busy <= 1;
+				bit_counter <= 8'b1000_0000;
+				end_of_byte <= 0;
 				if (~cpha)
 					output_shift_reg <= data_out;
 			end
 			
 			if (read_edge)
 			begin
-				input_shift_reg	<= msb_first ?	{input_shift_reg[6:0], mosi_sync_2}:
-												{mosi_sync_2, input_shift_reg[7:1]};
-				if (bit_counter == 1)
-					data_in <= input_shift_reg;
+				if (bit_counter != 1)
+					input_shift_reg	<= msb_first ?	{input_shift_reg[6:0], mosi_sync_2}:
+													{mosi_sync_2, input_shift_reg[7:1]};
+				else
+				begin
+					data_in <= msb_first ?	{input_shift_reg[6:0], mosi_sync_2}:
+											{mosi_sync_2, input_shift_reg[7:1]};
+					end_of_byte <= 1;
+				end
 			end
+			
 			if (shift_edge)
 			begin
-				if (~(cpha && (bit_counter == '1)))
+				if (~(cpha && (bit_counter == 8'b1000_0000)))
 				output_shift_reg <= msb_first ?	{output_shift_reg[6:0], 1'b0}:
 												{1'b0, output_shift_reg[7:1]};
-				bit_counter <= bit_counter - 1'b1;
+				bit_counter <= (bit_counter >> 1);
 			end
+			
+			if (cs_posedge)
+				busy <= 0;
 		end
 	end
 	
 	logic	miso_internal;
 	
 	assign	miso_internal = msb_first ? output_shift_reg[7] : output_shift_reg[0];
-	assign	miso = cs_sync_2 ? 'z : miso_internal;
+	assign	miso = cs ? 'z : miso_internal;
 	
 endmodule
