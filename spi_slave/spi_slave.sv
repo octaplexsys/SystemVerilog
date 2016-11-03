@@ -35,14 +35,14 @@ module spi_slave
     begin
         if (rst)
         begin
-            sck_sync_1      <= 0; // if cpol = 1, sck wire is 1 when idle
-            sck_sync_2      <= 0; // else
-            sck_sync_2_prev <= 0; // if cpol = 0, sck wire is 0 when idle
+            sck_sync_1      <= 0;
+            sck_sync_2      <= 0;
+            sck_sync_2_prev <= 0;
         end else
         begin
-            sck_sync_1      <= sck;
-            sck_sync_2      <= sck_sync_1;
-            sck_sync_2_prev <= sck_sync_2;
+            sck_sync_1      <= sck;        // if cpol = 1, sck wire is 1 when idle
+            sck_sync_2      <= sck_sync_1; // else
+            sck_sync_2_prev <= sck_sync_2; // if cpol = 0, sck wire is 0 when idle
         end
     end
 
@@ -129,15 +129,18 @@ module spi_slave
                 end_of_byte <= 0;
                 busy        <= 1;
                 
-                bit_counter <= 8'b1000_0000;
-                
-                if (~cpha)
+                if(cpha)
+                    bit_counter <= 8'b1000_0000;
+                else
+                begin
+                    bit_counter <= 8'b0100_0000;
                     output_shift_reg <= data_out;
+                end
             end
 
             if (read_edge)
             begin
-                if (bit_counter != 1)
+                if (bit_counter != 8'b0)
                     input_shift_reg <= msb_first ? {input_shift_reg[6:0], mosi_sync_2}:
                                                    {mosi_sync_2, input_shift_reg[7:1]};
                 else
@@ -153,6 +156,9 @@ module spi_slave
                 if (~(cpha && (bit_counter == 8'b1000_0000)))
                     output_shift_reg <= msb_first ? {output_shift_reg[6:0], 1'b0}:
                                                     {1'b0, output_shift_reg[7:1]};
+                else
+                    output_shift_reg <= data_out;
+                
                 bit_counter <= (bit_counter >> 1);
             end
 
