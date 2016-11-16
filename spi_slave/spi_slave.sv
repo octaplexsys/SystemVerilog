@@ -20,29 +20,26 @@ module spi_slave
     input   logic   msb_first, // when is 1, most significant bit is sended at first
                                // else - at least (direction of transmission)
 
-    input   logic[7:0]  data_out, // storage register for transmitted data
-    output  logic[7:0]  data_in,  // storage register for received data
+    input   logic[7:0]  data_tx, // storage register for transmitted data
+    output  logic[7:0]  data_rx,  // storage register for received data
 
     output  logic   busy,       // is 1 if spi_slave is busy, 0 if it's free
     output  logic   end_of_byte // is 1 at the end of transmission, keep value until new transmission
 );
     // synchronizers against metastability	
-    logic   sck_sync_1;
-    logic   sck_sync_2;
-    logic   sck_sync_2_prev;
+    logic   sck_d1;
+    logic   sck_d2;
+    logic   sck_d2_prev;
 
-    always_ff @(posedge clk or posedge rst)
-    begin
-        if (rst)
-        begin
-            sck_sync_1      <= 0;
-            sck_sync_2      <= 0;
-            sck_sync_2_prev <= 0;
-        end else
-        begin
-            sck_sync_1      <= sck;        // if cpol = 1, sck wire is 1 when idle
-            sck_sync_2      <= sck_sync_1; // else
-            sck_sync_2_prev <= sck_sync_2; // if cpol = 0, sck wire is 0 when idle
+    always_ff @(posedge clk or posedge rst) begin
+        if(rst) begin
+            sck_d1      <= 0;
+            sck_d2      <= 0;
+            sck_d2_prev <= 0;
+        end else begin
+            sck_d1      <= sck;    // if cpol = 1, sck wire is 1 when idle
+            sck_d2      <= sck_d1; // else
+            sck_d2_prev <= sck_d2; // if cpol = 0, sck wire is 0 when idle
         end
     end
 
@@ -50,8 +47,8 @@ module spi_slave
     logic   sck_posedge;
     logic   sck_negedge;
 
-    assign  sck_posedge = (~sck_sync_2_prev) & sck_sync_2; // from 0 to 1
-    assign  sck_negedge = sck_sync_2_prev & (~sck_sync_2); // from 1 to 0
+    assign  sck_posedge = (~sck_d2_prev) & sck_d2; // from 0 to 1
+    assign  sck_negedge = sck_d2_prev & (~sck_d2); // from 1 to 0
 
     logic   read_edge;
     logic   shift_edge;
@@ -62,22 +59,19 @@ module spi_slave
                                  (cpol ? sck_posedge : sck_negedge);	
 
     // synchronizers against metastability	
-    logic   cs_sync_1;
-    logic   cs_sync_2;
-    logic   cs_sync_2_prev;
+    logic   cs_d1;
+    logic   cs_d2;
+    logic   cs_d2_prev;
 
-    always_ff @(posedge clk or posedge rst)
-    begin
-        if (rst)
-        begin
-            cs_sync_1       <= 1;
-            cs_sync_2       <= 1;
-            cs_sync_2_prev  <= 1;
-        end else
-        begin
-            cs_sync_1       <= cs;
-            cs_sync_2       <= cs_sync_1;
-            cs_sync_2_prev  <= cs_sync_2;
+    always_ff @(posedge clk or posedge rst) begin
+        if(rst) begin
+            cs_d1       <= 1;
+            cs_d2       <= 1;
+            cs_d2_prev  <= 1;
+        end else begin
+            cs_d1       <= cs;
+            cs_d2       <= cs_d1;
+            cs_d2_prev  <= cs_d2;
         end
     end
 
@@ -85,91 +79,83 @@ module spi_slave
     logic   cs_negedge;
     logic   cs_posedge;
 
-    assign  cs_posedge = (~cs_sync_2_prev) & cs_sync_2; // from 0 to 1
-    assign  cs_negedge = cs_sync_2_prev & (~cs_sync_2); // from 1 to 0
+    assign  cs_posedge = (~cs_d2_prev) & cs_d2; // from 0 to 1
+    assign  cs_negedge = cs_d2_prev & (~cs_d2); // from 1 to 0
 
     // synchronizers against metastability
-    logic   mosi_sync_1;
-    logic   mosi_sync_2;
+    logic   mosi_d1;
+    logic   mosi_d2;
 
-    always_ff @(posedge clk or posedge rst)
-    begin
-        if (rst)
-        begin
-            mosi_sync_1 <= 0;
-            mosi_sync_2 <= 0;
-        end else
-        begin
-            mosi_sync_1 <= mosi;
-            mosi_sync_2 <= mosi_sync_1;
+    always_ff @(posedge clk or posedge rst) begin
+        if(rst) begin
+            mosi_d1 <= 0;
+            mosi_d2 <= 0;
+        end else begin
+            mosi_d1 <= mosi;
+            mosi_d2 <= mosi_d1;
         end
     end
 
-    // main shift registers
-    logic[7:0]  input_shift_reg;
-    logic[7:0]  output_shift_reg;
-
+    // in & out shift registers
+    logic[7:0]  i_buf;
+    logic[7:0]  o_buf;
+    
+    // received bits counter
     logic[7:0]  bit_counter;
+    
+    assign end_of_byte = !(bit_counter || rst);
+    
+    always_ff @(posedge clk or posedge rst) begin
+        if(rst) begin
+            data_rx     <= '0;
+            
+            i_buf <= '0;
+            o_buf <= '0;
+        end else begin
+            if(cs_negedge)              
+                if(~cpha)
+                    o_buf <= data_tx;
 
-    always_ff @(posedge clk or posedge rst)
-    begin
-        if (rst)
-        begin
-            data_in          <= '0;
-            input_shift_reg  <= '0;
-            output_shift_reg <= '0;
-            bit_counter      <= '0;
+            if(read_edge)
+                if(bit_counter == 8'b0)
+                    data_rx <= msb_first ? {i_buf[6:0], mosi_d2}:
+                                           {mosi_d2, i_buf[7:1]};
+                else
+                    i_buf <= msb_first ? {i_buf[6:0], mosi_d2}:
+                                         {mosi_d2, i_buf[7:1]};
 
+            if(shift_edge)
+                if(cpha && (bit_counter == 8'b1000_0000))
+                    o_buf <= data_tx;
+                else
+                    o_buf <= msb_first ? {o_buf[6:0], 1'b0}:
+                                         {1'b0, o_buf[7:1]};
+        end
+    end
+
+    always_ff @(posedge clk or posedge rst) begin
+        if(rst) begin
+            bit_counter <= '0;
             busy        <= 0;
-            end_of_byte <= 0;
-        end else
-        begin
-            if(cs_negedge)
-            begin
-                end_of_byte <= 0;
-                busy        <= 1;
-                
-                if(cpha)
-                    bit_counter <= 8'b1000_0000;
-                else
-                begin
-                    bit_counter <= 8'b0100_0000;
-                    output_shift_reg <= data_out;
-                end
+        end else begin
+            if(cs_negedge) begin
+                busy        <= 1;                
+                bit_counter <= 8'b1000_0000;
             end
+            
+            if(~cs_d2 & cs_d2_prev)
 
-            if (read_edge)
-            begin
-                if (bit_counter != 8'b0)
-                    input_shift_reg <= msb_first ? {input_shift_reg[6:0], mosi_sync_2}:
-                                                   {mosi_sync_2, input_shift_reg[7:1]};
-                else
-                begin
-                    data_in <= msb_first ? {input_shift_reg[6:0], mosi_sync_2}:
-                                           {mosi_sync_2, input_shift_reg[7:1]};
-                    end_of_byte <= 1;
-                end
-            end
-
-            if (shift_edge)
-            begin
-                if (~(cpha && (bit_counter == 8'b1000_0000)))
-                    output_shift_reg <= msb_first ? {output_shift_reg[6:0], 1'b0}:
-                                                    {1'b0, output_shift_reg[7:1]};
-                else
-                    output_shift_reg <= data_out;
-                
+            if(shift_edge)                
                 bit_counter <= (bit_counter >> 1);
-            end
 
-            if (cs_posedge)
+            if(cs_posedge)
                 busy <= 0;
         end
     end
 
     logic   miso_internal;
 
-    assign  miso_internal = msb_first ? output_shift_reg[7] : output_shift_reg[0];
+    assign  miso_internal = msb_first ? o_buf[7] : o_buf[0];
     assign  miso = (cs | rst) ? 'z : miso_internal;
 
 endmodule

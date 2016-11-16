@@ -13,8 +13,8 @@ module spi_slave_tb;
 
     logic   msb_first;
 
-    logic[7:0]  data_out;
-    logic[7:0]  data_in;
+    logic[7:0]  data_tx;
+    logic[7:0]  data_rx;
 
     logic   busy;
     logic   end_of_byte;
@@ -38,22 +38,18 @@ module spi_slave_tb;
         cpol = 0;
         cpha = 0;
 
-        msb_first = 1;
+        msb_first = 0;
 
-        data_out = 0;
+        data_tx = 0;
 
         #40ns
         rst = ~rst;
         
-        #63ns
-        transmit;
-        #63ns
-        transmit;
-        #63ns
-        transmit;
-        #63ns
-        transmit;
-
+        repeat (8) begin
+            #63ns;
+            transmit;
+        end
+        
         #77ns
         $stop;
     end
@@ -62,49 +58,24 @@ module spi_slave_tb;
         mosi <= $urandom() % 2;
 
     always
-    #10ns clk = ~clk;
+        #10ns clk = ~clk;
         
     task transmit;
-        cpol = $urandom() % 2;
-        cpha = $urandom() % 2;
-        sck  = cpol;
+        cpol      = $urandom() % 2;
+        cpha      = $urandom() % 2;
+        msb_first = $urandom() % 2;
+        sck       = cpol;
         
-        data_out = $urandom() % 256;
+        data_tx = $urandom() % 256;
         
+        #20ns;
         cs  = ~cs;
-
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
-        #77ns
-        sck = ~sck;
+        
+        #10ns;
+        repeat (16) begin
+            #77ns
+            sck = ~sck;
+        end
         
         #77ns
         cs = ~cs;
