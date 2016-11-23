@@ -83,7 +83,7 @@ module spi_slave_tb;
       
       transmitted.try_get(temp);   
       if(data_rx === temp)
-         $display("SUCCESSFULL TRANSMITTING");
+         $display("SUCCESSFUL TRANSMITTING");
       else
          $display("FAILED TRANSMITTING");
    end
