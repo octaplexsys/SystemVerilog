@@ -69,7 +69,7 @@ module spi_slave_tb;
       #40ns
       rst = ~rst;
       
-      repeat (100) begin
+      repeat (1000000) begin
          #63ns;
          transmit;
       end
@@ -84,8 +84,10 @@ module spi_slave_tb;
       transmitted.try_get(temp);   
       if(data_rx === temp)
          $display("SUCCESSFUL TRANSMITTING");
-      else
+      else begin
          $display("FAILED TRANSMITTING");
+         $stop;
+      end
    end
       
    always
